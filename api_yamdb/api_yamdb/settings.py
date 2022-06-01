@@ -101,3 +101,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
+
+CHOICES_SCORE = [(i,i) for i in range (1.11)]
