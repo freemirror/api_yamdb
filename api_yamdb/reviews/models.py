@@ -1,5 +1,11 @@
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+
+class User(AbstractUser):
+    bio = models.TextField(blank=True,)
+    role = models.TextField()
 
 
 class Review(models.Model):
