@@ -102,4 +102,9 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
-CHOICES_SCORE = [(i,i) for i in range (1.11)]
+CHOICES_SCORE = [(i, i) for i in range(1, 11)]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 5
+}
