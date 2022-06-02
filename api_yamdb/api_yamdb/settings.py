@@ -80,7 +80,7 @@ AUTH_USER_MODEL = 'reviews.User'
 
 LANGUAGE_CODE = 'ru'
 
-TIME_ZONE = 'UTC +3'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
