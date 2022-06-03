@@ -12,9 +12,14 @@ ROLE_CHOICES = [
 
 
 class User(AbstractUser):
-    email = models.EmailField(_('email address'), unique=True)
+    password = models.CharField(_('password'), max_length=128, blank=True)
+    email = models.EmailField(_('email address'), max_length=254, unique=True)
     bio = models.TextField(blank=True,)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+
+
+class Title(models.Model):
+    pass
 
 
 class Review(models.Model):
@@ -64,3 +69,6 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text[:15]
+
+
+
