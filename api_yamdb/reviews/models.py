@@ -3,12 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-
-ROLE_CHOICES = [
-        ('user', 'User'),
-        ('moderator', 'Moderator'),
-        ('admin', 'Admin'),
-    ]
+from api_yamdb.settings import CHOICES_SCORE, ROLE_CHOICES
 
 
 class Genre(models.Model):
@@ -58,7 +53,11 @@ class GenreTitle(models.Model):
 class User(AbstractUser):
     email = models.EmailField(_('email address'), unique=True)
     bio = models.TextField(blank=True,)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+    role = models.CharField(
+        max_length=10,
+        choices=ROLE_CHOICES,
+        default='user'
+    )
 
 
 class Review(models.Model):
@@ -74,7 +73,8 @@ class Review(models.Model):
         related_name='reviews'
     )
     score = models.IntegerField(
-        validators=[MaxValueValidator(10), MinValueValidator(1)]
+        validators=[MaxValueValidator(10), MinValueValidator(1)],
+        choices=CHOICES_SCORE
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
