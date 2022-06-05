@@ -1,18 +1,30 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
 from django.shortcuts import get_object_or_404
 from reviews.models import Genre, Title, Category, Review
 from .permissions import SpecialPermission
-from .serializers import GenreSerializer, CategorySerializer, TitleSerializer, CommentSerializer, ReviewSerializer
+from .serializers import (
+    GenreSerializer,
+    CategorySerializer,
+    TitleSerializer,
+    CommentSerializer,
+    ReviewSerializer
+)
 
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fields  = ('name',)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    lookup_field = 'slug'
+    filter_backends = (filters.SearchFilter,)
+    search_fields  = ('name',)
 
 
 class TitleViewSet(viewsets.ModelViewSet):

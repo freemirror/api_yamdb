@@ -36,7 +36,7 @@ class Title(models.Model):
         blank=True,
         through='GenreTitle'
     )
-    description = models.TextField()
+    description = models.TextField(blank=True)
 
     def __str__(self):
         return self.name

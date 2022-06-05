@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.db.models import Avg
+import datetime as dt
+from reviews.models import GenreTitle
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from reviews.models import Genre, Title, Category, User, Comment, Review
@@ -7,18 +9,20 @@ from reviews.models import Genre, Title, Category, User, Comment, Review
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug')
         model = Genre
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug')
         model = Category
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField(read_only=True)
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
 
     class Meta:
         model = Title
@@ -31,6 +35,12 @@ class TitleSerializer(serializers.ModelSerializer):
             title=obj.id
         ).aggregate(rating=Avg('score'))
         return value['rating']
+
+    def validate_year(self, value):
+        year = dt.date.today().year
+        if value > year:
+            raise serializers.ValidationError('Проверьте год рождения!')
+        return value
 
 
 class PostSerializer(serializers.ModelSerializer):
