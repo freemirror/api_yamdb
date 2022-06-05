@@ -15,7 +15,11 @@ class User(AbstractUser):
     password = models.CharField(_('password'), max_length=128, blank=True)
     email = models.EmailField(_('email address'), max_length=254, unique=True)
     bio = models.TextField(blank=True,)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+    role = models.CharField(
+        max_length=10,
+        choices=ROLE_CHOICES,
+        default='user'
+    )
 
 
 class Title(models.Model):
