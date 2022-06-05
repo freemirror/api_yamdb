@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import User
 from .permissions import AdminOnly
@@ -67,6 +68,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AdminOnly,)
+    pagination_class = LimitOffsetPagination
     lookup_field = 'username'
 
     @action(
