@@ -13,7 +13,8 @@ from .permissions import SpecialPermission, AdminOnly
 from .serializers import (
     GenreSerializer,
     CategorySerializer,
-    TitleSerializer,
+    TitleReadSerializer,
+    TitleWriteSerializer,
     CommentSerializer,
     ReviewSerializer,
     UserSerializer,
@@ -41,12 +42,16 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+    
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleReadSerializer
+        return TitleWriteSerializer
 
     def perform_create(self, serializer):
         category = Category.objects.get(slug=self.request.data.get('category'))
-        print(category, '\n\n\n')
-        serializer.save(category=category)
+        genre = Genre.objects.filter(slug__in=self.request.data.get('genre'))
+        serializer.save(category=category, genre=genre)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

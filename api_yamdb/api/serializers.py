@@ -21,27 +21,31 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleReadSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField(read_only=True)
-    genre = serializers.SlugRelatedField(
-        # required=False,
-        slug_field='slug',
-        many=True,
-        queryset=Genre.objects.all()
-        # read_only=True
-    )
     genre = GenreSerializer(many=True, read_only=True)
-    # category = CategorySerializer(read_only=True)
-    category = serializers.SlugRelatedField(
-        required=False,
-        slug_field='slug',
-        # queryset=Category.objects.all()
-        read_only=True
-    )
+    category = CategorySerializer(read_only=True)
 
     class Meta:
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
+        model = Title
+
+    def get_rating(self, obj):
+        value = Review.objects.filter(
+            title=obj.id
+        ).aggregate(rating=Avg('score'))
+        return value['rating']
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True, read_only=True)
+    category = CategorySerializer(read_only=True)
+
+    class Meta:
+        fields = (
+            'id', 'name', 'year', 'description', 'genre', 'category'
         )
         model = Title
 
@@ -51,12 +55,6 @@ class TitleSerializer(serializers.ModelSerializer):
         for genre in genres:
             GenreTitle.objects.create(genre=genre, title=title,)
         return title
-
-    def get_rating(self, obj):
-        value = Review.objects.filter(
-            title=obj.id
-        ).aggregate(rating=Avg('score'))
-        return value['rating']
 
     def validate_year(self, value):
         year = dt.date.today().year
