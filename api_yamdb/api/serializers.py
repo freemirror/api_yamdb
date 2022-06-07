@@ -1,10 +1,12 @@
+import re
 from rest_framework import serializers
 from django.db.models import Avg
 import datetime as dt
-from reviews.models import GenreTitle
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from reviews.models import Genre, Title, Category, User, Comment, Review
+from reviews.models import (
+    Genre, Title, Category, User, Comment, Review, GenreTitle, User
+)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -22,12 +24,14 @@ class CategorySerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField(read_only=True)
     genre = serializers.SlugRelatedField(
-        required=False,
+        # required=False,
         slug_field='slug',
         many=True,
-        # queryset=Category.objects.all()
-        read_only=True
+        queryset=Genre.objects.all()
+        # read_only=True
     )
+    genre = GenreSerializer(many=True, read_only=True)
+    # category = CategorySerializer(read_only=True)
     category = serializers.SlugRelatedField(
         required=False,
         slug_field='slug',
@@ -41,6 +45,13 @@ class TitleSerializer(serializers.ModelSerializer):
         )
         model = Title
 
+    def create(self, validated_data):
+        genres = list(validated_data.pop('genre'))
+        title = Title.objects.create(**validated_data)
+        for genre in genres:
+            GenreTitle.objects.create(genre=genre, title=title,)
+        return title
+
     def get_rating(self, obj):
         value = Review.objects.filter(
             title=obj.id
@@ -52,19 +63,6 @@ class TitleSerializer(serializers.ModelSerializer):
         if value > year:
             raise serializers.ValidationError('Проверьте год рождения!')
         return value
-
-
-class PostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'bio',
-            'role'
-        )
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -85,3 +83,73 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
+
+
+class ValidateFunctions:
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).count():
+            raise serializers.ValidationError(
+                'Указанное имя пользователя уже существует.'
+            )
+        elif value == 'me':
+            raise serializers.ValidationError(
+                'Использовать имя me в качестве username запрещено.'
+            )
+        elif not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError(
+                'В username используются запрещенные символы'
+            )
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).count():
+            raise serializers.ValidationError(
+                'Указанный email уже существует.'
+            )
+        elif not re.match(r'[^@\s]+@[^@\s]+\.[^@\s]+', value):
+            raise serializers.ValidationError(
+                'Некоректный адресс e-mail'
+            )
+        return value
+
+
+class UserSerializer(serializers.ModelSerializer, ValidateFunctions):
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
+
+
+class OwnUserSerializer(serializers.ModelSerializer, ValidateFunctions):
+    username = serializers.CharField(max_length=150, required=False)
+    email = serializers.EmailField(max_length=254, required=False)
+    role = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
+
+
+class SingUpSerializer(serializers.Serializer, ValidateFunctions):
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(max_length=254)
+
+
+class GetTokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    confirmation_code = serializers.CharField()
