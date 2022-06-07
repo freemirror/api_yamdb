@@ -21,14 +21,25 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField(read_only=True)
-    genre = GenreSerializer(many=True)
-    category = CategorySerializer()
+    genre =  serializers.SlugRelatedField(
+        required=False,
+        slug_field='slug',
+        many=True,
+        # queryset=Category.objects.all()
+        read_only=True
+    )
+    category = serializers.SlugRelatedField(
+        required=False,
+        slug_field='slug',
+        # queryset=Category.objects.all()
+        read_only=True
+    )
 
     class Meta:
-        model = Title
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
+        model = Title
 
     def get_rating(self, obj):
         value = Review.objects.filter(

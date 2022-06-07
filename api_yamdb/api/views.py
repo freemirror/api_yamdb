@@ -31,6 +31,11 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
 
+    def perform_create(self, serializer):
+        category = Category.objects.get(slug=self.request.data.get('category'))
+        print(category, '\n\n\n')
+        serializer.save(category=category)
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
