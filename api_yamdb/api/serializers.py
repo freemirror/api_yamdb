@@ -1,7 +1,12 @@
 import re
+import datetime as dt
 
 from rest_framework import serializers
-from reviews.models import User
+from django.db.models import Avg
+
+from django.shortcuts import get_object_or_404
+
+from reviews.models import Genre, Title, Category, User, Comment, Review, GenreTitle, CategoryTitle
 
 
 class ValidateFunctions:
@@ -72,3 +77,59 @@ class SingUpSerializer(serializers.Serializer, ValidateFunctions):
 class GetTokenSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField()
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('name', 'slug')
+        model = Genre
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('name', 'slug')
+        model = Category
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField(read_only=True)
+    genre = GenreSerializer(many=True, required=False)
+    category = CategorySerializer(many=False, required=False)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
+
+    def get_rating(self, obj):
+        value = Review.objects.filter(
+            title=obj.id
+        ).aggregate(rating=Avg('score'))
+        return value['rating']
+
+    def validate_year(self, value):
+        year = dt.date.today().year
+        if value > year:
+            raise serializers.ValidationError('Проверьте год рождения!')
+        return value
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'author', 'pub_date')
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')

@@ -3,12 +3,59 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from api_yamdb.settings import CHOICES_SCORE, ROLE_CHOICES
 
-ROLE_CHOICES = [
-        ('user', 'User'),
-        ('moderator', 'Moderator'),
-        ('admin', 'Admin'),
-    ]
+
+class Genre(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+
+class Title(models.Model):
+    name = models.CharField(max_length=256)
+    year = models.IntegerField(blank=True)
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL,
+        related_name='titles',
+        null=True, blank=True
+    )
+    genre = models.ManyToManyField(
+        Genre,
+        related_name='titles',
+        blank=True,
+        through='GenreTitle'
+    )
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.title} {self.genre}'
+
+
+class CategoryTitle(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.title} {self.category}'
 
 
 class User(AbstractUser):
@@ -20,10 +67,6 @@ class User(AbstractUser):
         choices=ROLE_CHOICES,
         default='user'
     )
-
-
-class Title(models.Model):
-    pass
 
 
 class Review(models.Model):
@@ -39,7 +82,8 @@ class Review(models.Model):
         related_name='reviews'
     )
     score = models.IntegerField(
-        validators=[MaxValueValidator(10), MinValueValidator(1)]
+        validators=[MaxValueValidator(10), MinValueValidator(1)],
+        choices=CHOICES_SCORE
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
@@ -73,6 +117,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text[:15]
-
-
-
