@@ -42,15 +42,32 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    
+
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWriteSerializer
 
     def perform_create(self, serializer):
-        category = Category.objects.get(slug=self.request.data.get('category'))
-        genre = Genre.objects.filter(slug__in=self.request.data.get('genre'))
+        if not self.request.data.get('category'):
+            raise ValueError('Запрос должен содержать категорию')
+        else:
+            category = Category.objects.get(slug=self.request.data.get('category'))
+        if not self.request.data.get('genre'):
+            raise ValueError('Запрос должен содержать жанр')
+        else:
+            genre = Genre.objects.filter(slug__in=self.request.data.get('genre'))
+        serializer.save(category=category, genre=genre)
+
+    def perform_update(self, serializer):
+        if not self.request.data.get('category'):
+            raise ValueError('Запрос должен содержать категорию')
+        else:
+            category = Category.objects.get(slug=self.request.data.get('category'))
+        if not self.request.data.get('genre'):
+            raise ValueError('Запрос должен содержать жанр')
+        else:
+            genre = Genre.objects.filter(slug__in=self.request.data.get('genre'))
         serializer.save(category=category, genre=genre)
 
 

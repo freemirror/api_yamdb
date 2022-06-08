@@ -1,4 +1,5 @@
 import re
+from unicodedata import category
 from rest_framework import serializers
 from django.db.models import Avg
 import datetime as dt
@@ -55,6 +56,17 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         for genre in genres:
             GenreTitle.objects.create(genre=genre, title=title,)
         return title
+
+    def update(self, instance, validated_data):
+        genres = list(validated_data.pop('genre'))
+        title = Title.objects.filter(id=instance.id)
+        title.update(**validated_data)
+        genre_titles = GenreTitle.objects.filter(title_id=instance.id)
+        genre_titles.delete()
+        for genre in genres:
+            GenreTitle.objects.create(genre=genre, title=title[0])
+        return title[0]
+    
 
     def validate_year(self, value):
         year = dt.date.today().year
