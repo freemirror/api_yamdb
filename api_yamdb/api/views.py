@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import LimitOffsetPagination
 from reviews.models import Genre, Title, Category, Review, User
-from .permissions import SpecialPermission, AdminOnly
+from .permissions import SpecialPermission, AdminOnly, ReadAnyWriteAdmin
 from .serializers import (
     GenreSerializer,
     CategorySerializer,
@@ -27,6 +27,7 @@ from .serializers import (
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (ReadAnyWriteAdmin,)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields  = ('name',)
@@ -35,6 +36,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (ReadAnyWriteAdmin,)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields  = ('name',)
@@ -42,6 +44,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
+    permission_classes = (ReadAnyWriteAdmin,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
