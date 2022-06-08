@@ -120,7 +120,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         category = Category.objects.get(
             slug=self.request.data['category'])
-        genre = Genre.objects.filter(slug=self.request.data['genre'])
+        genre = Genre.objects.filter(slug__in=self.request.data['genre'])
         serializer.save(genre=genre, category=category)
 
 
