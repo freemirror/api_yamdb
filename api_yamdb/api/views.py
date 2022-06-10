@@ -41,7 +41,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
     permission_classes = (ReadAnyWriteAdmin,)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
-    search_fields  = ('name',)
+    search_fields = ('name',)
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -92,9 +92,11 @@ class CommentViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
         serializer.save(
             author=self.request.user,
-            review_id=self.kwargs.get("review_id")
+            review_id=review.id
+            # review_id=self.kwargs.get("review_id")
         )
 
 
@@ -107,6 +109,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, id=title_id)
         queryset = title.reviews.all()
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        title = get_object_or_404(Title, id=self.kwargs.get("title_id"))
+        if self.request.user.reviews.filter(title=title.id).count():
+            return Response({'author': 'Отзыв от данного автора уже существует'}, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         serializer.save(

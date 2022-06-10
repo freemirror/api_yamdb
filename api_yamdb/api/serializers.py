@@ -2,7 +2,7 @@ import re
 from rest_framework import serializers
 from django.db.models import Avg
 import datetime as dt
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import (
     Genre, Title, Category, User, Comment, Review, GenreTitle, User
