@@ -1,9 +1,9 @@
 from csv import DictReader
+
 from django.core.management import BaseCommand
 
-from reviews.models import (
-    Category, Comment, Genre, Title, GenreTitle, Review, User
-)
+from reviews.models import (Category, Comment, Genre, GenreTitle, Review,
+                            Title, User)
 
 
 class Command(BaseCommand):
@@ -42,7 +42,7 @@ class Command(BaseCommand):
             genre_title = GenreTitle(
                 title=Title.objects.get(pk=row['title_id']),
                 genre=Genre.objects.get(pk=row['genre_id'])
-                )
+            )
             genre_title.save()
         print('genre_title.csv uploaded')
 
@@ -57,7 +57,7 @@ class Command(BaseCommand):
                 bio=row['bio'],
                 first_name=row['first_name'],
                 last_name=row['last_name']
-                )
+            )
             user.save()
         print('user.csv uploaded')
 
@@ -70,7 +70,7 @@ class Command(BaseCommand):
                 author=User.objects.get(pk=row['author']),
                 score=row['score'],
                 pub_date=row['pub_date']
-                )
+            )
             review.save()
         print('review.csv uploaded')
 
@@ -82,7 +82,7 @@ class Command(BaseCommand):
                 text=row['text'],
                 author=User.objects.get(pk=row['author']),
                 pub_date=row['pub_date']
-                )
+            )
             comment.save()
         print('comments.csv uploaded')
 

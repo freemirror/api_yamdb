@@ -1,12 +1,11 @@
-import re
-from rest_framework import serializers
-from django.db.models import Avg
 import datetime as dt
-from rest_framework.validators import UniqueTogetherValidator
+import re
 
-from reviews.models import (
-    Genre, Title, Category, User, Comment, Review, GenreTitle, User
-)
+from django.db.models import Avg
+from rest_framework import serializers
+
+from reviews.models import (Category, Comment, Genre, GenreTitle, Review,
+                            Title, User)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -65,7 +64,6 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         for genre in genres:
             GenreTitle.objects.create(genre=genre, title=title[0])
         return title[0]
-    
 
     def validate_year(self, value):
         year = dt.date.today().year

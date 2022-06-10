@@ -1,31 +1,23 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from rest_framework import viewsets, filters, status, mixins
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.pagination import LimitOffsetPagination
-from reviews.models import Genre, Title, Category, Review, User
+
+from reviews.models import Category, Genre, Review, Title, User
 from .filters import TitleFilter
-from .permissions import (
-    SpecialPermission, AdminOnly, ReadAnyWriteAdmin
-)
-from .serializers import (
-    GenreSerializer,
-    CategorySerializer,
-    TitleReadSerializer,
-    TitleWriteSerializer,
-    CommentSerializer,
-    ReviewSerializer,
-    UserSerializer,
-    SingUpSerializer,
-    GetTokenSerializer,
-    OwnUserSerializer
-)
+from .permissions import AdminOnly, ReadAnyWriteAdmin, SpecialPermission
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, GetTokenSerializer,
+                          OwnUserSerializer, ReviewSerializer,
+                          SingUpSerializer, TitleReadSerializer,
+                          TitleWriteSerializer, UserSerializer)
 
 
 class ListCreateDestroyViewSet(mixins.ListModelMixin,
@@ -50,7 +42,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
     permission_classes = (ReadAnyWriteAdmin,)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
-    search_fields  = ('name',)
+    search_fields = ('name',)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -66,17 +58,20 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         try:
-            genre = Genre.objects.filter(slug__in=self.request.data.getlist('genre'))
-        except:
-            genre = list(Genre.objects.filter(slug__in=self.request.data.get('genre')))
+            genre = Genre.objects.filter(
+                slug__in=self.request.data.getlist('genre'))
+        except TypeError:
+            genre = list(Genre.objects.filter(
+                slug__in=self.request.data.get('genre')))
         category = Category.objects.get(slug=self.request.data.get('category'))
         serializer.save(category=category, genre=genre)
 
     def perform_update(self, serializer):
         category = Category.objects.get(slug=self.request.data.get('category'))
         try:
-            genre = Genre.objects.filter(slug__in=self.request.data.get('genre'))
-        except:
+            genre = Genre.objects.filter(
+                slug__in=self.request.data.get('genre'))
+        except TypeError:
             genre = []
         serializer.save(category=category, genre=genre)
 
@@ -96,7 +91,6 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(
             author=self.request.user,
             review_id=review.id
-            # review_id=self.kwargs.get("review_id")
         )
 
 
@@ -115,10 +109,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         title = get_object_or_404(Title, id=self.kwargs.get("title_id"))
         if self.request.user.reviews.filter(title=title.id).count():
-            return Response({'author': 'Отзыв от данного автора уже существует'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'author': 'Отзыв от данного автора уже существует'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         serializer.save(

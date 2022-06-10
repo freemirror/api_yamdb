@@ -22,13 +22,13 @@ class SpecialPermission(permissions.BasePermission):
             or request.user.is_superuser
         )
 
-  
+
 class AdminOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return (
-            request.user.is_authenticated and
-            (request.user.role == 'admin' or request.user.is_superuser)
+            request.user.is_authenticated
+            and (request.user.role == 'admin' or request.user.is_superuser)
         )
 
 
@@ -38,6 +38,6 @@ class ReadAnyWriteAdmin(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return (
-            request.user.is_authenticated and
-            (request.user.role == 'admin' or request.user.is_superuser)
+            request.user.is_authenticated
+            and (request.user.role == 'admin' or request.user.is_superuser)
         )
