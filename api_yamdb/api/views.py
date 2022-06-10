@@ -1,15 +1,19 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters, status, mixins
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import LimitOffsetPagination
 from reviews.models import Genre, Title, Category, Review, User
-from .permissions import SpecialPermission, AdminOnly, ReadAnyWriteAdmin
+from .filters import TitleFilter
+from .permissions import (
+    SpecialPermission, AdminOnly, ReadAnyWriteAdmin
+)
 from .serializers import (
     GenreSerializer,
     CategorySerializer,
@@ -24,7 +28,14 @@ from .serializers import (
 )
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class ListCreateDestroyViewSet(mixins.ListModelMixin,
+                               mixins.CreateModelMixin,
+                               mixins.DestroyModelMixin,
+                               viewsets.GenericViewSet):
+    pass
+
+
+class GenreViewSet(ListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (ReadAnyWriteAdmin,)
@@ -33,7 +44,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     search_fields  = ('name',)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (ReadAnyWriteAdmin,)
@@ -45,6 +56,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     permission_classes = (ReadAnyWriteAdmin,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -52,25 +65,19 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleWriteSerializer
 
     def perform_create(self, serializer):
-        if not self.request.data.get('category'):
-            raise ValueError('Запрос должен содержать категорию')
-        else:
-            category = Category.objects.get(slug=self.request.data.get('category'))
-        if not self.request.data.get('genre'):
-            raise ValueError('Запрос должен содержать жанр')
-        else:
-            genre = Genre.objects.filter(slug__in=self.request.data.get('genre'))
+        try:
+            genre = Genre.objects.filter(slug__in=self.request.data.getlist('genre'))
+        except:
+            genre = list(Genre.objects.filter(slug__in=self.request.data.get('genre')))
+        category = Category.objects.get(slug=self.request.data.get('category'))
         serializer.save(category=category, genre=genre)
 
     def perform_update(self, serializer):
-        if not self.request.data.get('category'):
-            raise ValueError('Запрос должен содержать категорию')
-        else:
-            category = Category.objects.get(slug=self.request.data.get('category'))
-        if not self.request.data.get('genre'):
-            raise ValueError('Запрос должен содержать жанр')
-        else:
+        category = Category.objects.get(slug=self.request.data.get('category'))
+        try:
             genre = Genre.objects.filter(slug__in=self.request.data.get('genre'))
+        except:
+            genre = []
         serializer.save(category=category, genre=genre)
 
 
