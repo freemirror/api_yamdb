@@ -53,7 +53,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         request = dict(self.request.data)
         genre = Genre.objects.filter(
-                slug__in=request.get('genre'))
+            slug__in=request.get('genre'))
         if not genre:
             raise AttributeError
         category = Category.objects.get(slug=self.request.data.get('category'))
