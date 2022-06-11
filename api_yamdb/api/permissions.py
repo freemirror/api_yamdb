@@ -1,5 +1,7 @@
 from rest_framework import permissions
 
+from reviews.models import User
+
 
 class SpecialPermission(permissions.BasePermission):
     """Доступ для чтения всем пользователям,
@@ -17,8 +19,8 @@ class SpecialPermission(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
             or obj.author == request.user
-            or request.user.role == 'admin'
-            or request.user.role == 'moderator'
+            or User.is_admin(user=request.user)
+            or User.is_moderator(user=request.user)
             or request.user.is_superuser
         )
 

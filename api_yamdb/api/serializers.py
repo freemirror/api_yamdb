@@ -91,6 +91,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
 
+    def validate_score(self, value):
+        if value in range(1, 11):
+            return value
+        raise serializers.ValidationError(
+            'Оценка произведения должна находится в пределах от 1 до 10'
+        )
+
 
 class ValidateFunctions:
 
