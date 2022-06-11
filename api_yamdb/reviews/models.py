@@ -24,7 +24,7 @@ class Category(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=256, blank=False)
-    year = models.IntegerField(blank=False)
+    year = models.PositiveSmallIntegerField(blank=False)
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
         related_name='titles',
@@ -48,7 +48,6 @@ class GenreTitle(models.Model):
 
 
 class User(AbstractUser):
-    password = models.CharField(_('password'), max_length=128, blank=True)
     email = models.EmailField(_('email address'), max_length=254, unique=True)
     bio = models.TextField(blank=True,)
     role = models.CharField(
@@ -70,14 +69,14 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         validators=[MaxValueValidator(10), MinValueValidator(1)],
         choices=CHOICES_SCORE
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -105,7 +104,7 @@ class Comment(models.Model):
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 

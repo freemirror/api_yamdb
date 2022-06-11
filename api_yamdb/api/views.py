@@ -12,19 +12,13 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title, User
 from .filters import TitleFilter
+from .mixins import ListCreateDestroyViewSet
 from .permissions import AdminOnly, ReadAnyWriteAdmin, SpecialPermission
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, GetTokenSerializer,
                           OwnUserSerializer, ReviewSerializer,
                           SingUpSerializer, TitleReadSerializer,
                           TitleWriteSerializer, UserSerializer)
-
-
-class ListCreateDestroyViewSet(mixins.ListModelMixin,
-                               mixins.CreateModelMixin,
-                               mixins.DestroyModelMixin,
-                               viewsets.GenericViewSet):
-    pass
 
 
 class GenreViewSet(ListCreateDestroyViewSet):
@@ -60,7 +54,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         try:
             genre = Genre.objects.filter(
                 slug__in=self.request.data.getlist('genre'))
-        except TypeError:
+        except AttributeError:
             genre = list(Genre.objects.filter(
                 slug__in=self.request.data.get('genre')))
         category = Category.objects.get(slug=self.request.data.get('category'))
@@ -161,11 +155,10 @@ class GetTokenView(APIView):
                 access = AccessToken.for_user(user)
                 data = {'token': str(access)}
                 return Response(data, status=status.HTTP_200_OK)
-            else:
-                data = {
-                    'confirmation_code': 'Указан неверный код подтверждения',
-                }
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
+            data = {
+                'confirmation_code': 'Указан неверный код подтверждения',
+            }
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
