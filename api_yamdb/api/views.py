@@ -51,22 +51,22 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleWriteSerializer
 
     def perform_create(self, serializer):
-        try:
-            genre = Genre.objects.filter(
-                slug__in=self.request.data.getlist('genre'))
-        except AttributeError:
-            genre = list(Genre.objects.filter(
-                slug__in=self.request.data.get('genre')))
+        request = dict(self.request.data)
+        genre = Genre.objects.filter(
+                slug__in=request.get('genre'))
+        if not genre:
+            raise AttributeError
         category = Category.objects.get(slug=self.request.data.get('category'))
-        serializer.save(category=category, genre=genre)
+        serializer.save(category=category, genre=list(genre))
 
     def perform_update(self, serializer):
         category = Category.objects.get(slug=self.request.data.get('category'))
-        try:
+        genre_slugs = self.request.data.get('genre')
+        if not genre_slugs:
+            genre = []
+        else:
             genre = Genre.objects.filter(
                 slug__in=self.request.data.get('genre'))
-        except TypeError:
-            genre = []
         serializer.save(category=category, genre=genre)
 
 
