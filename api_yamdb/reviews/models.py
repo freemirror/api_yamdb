@@ -59,15 +59,13 @@ class User(AbstractUser):
         default='user'
     )
 
-    @classmethod
-    def is_admin(cls, user):
-        if user.role == 'admin':
-            return True
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
 
-    @classmethod
-    def is_moderator(cls, user):
-        if user.role == 'moderator':
-            return True
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'
 
 
 class Review(models.Model):

@@ -1,7 +1,5 @@
 from rest_framework import permissions
 
-from reviews.models import User
-
 
 class SpecialPermission(permissions.BasePermission):
     """Доступ для чтения всем пользователям,
@@ -19,8 +17,8 @@ class SpecialPermission(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
             or obj.author == request.user
-            or User.is_admin(user=request.user)
-            or User.is_moderator(user=request.user)
+            or request.user.is_admin
+            or request.user.is_moderator
             or request.user.is_superuser
         )
 
@@ -30,16 +28,16 @@ class AdminOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
-            and (User.is_admin(user=request.user) or request.user.is_superuser)
+            and (request.user.is_admin or request.user.is_superuser)
         )
 
 
 class ReadAnyWriteAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
+
         return (
-            request.user.is_authenticated
-            and (User.is_admin(user=request.user) or request.user.is_superuser)
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated
+            and (request.user.is_admin or request.user.is_superuser)
         )
